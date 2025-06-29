@@ -93,9 +93,9 @@ sudo apt upgrade -y
       desc = "Eaton UPS for QNAP"
     ```
 
-7- Save &  link to convenient dir (refer to 4)
+7. Save &  link to convenient dir (refer to 4)
 
-8- Edit `upsmon.conf`
+8. Edit `upsmon.conf`
 
     ```
     RUN_AS_USER root
@@ -125,7 +125,7 @@ sudo apt upgrade -y
     NOCOMMWARNTIME 640
     ```
 
-9- Edit `upsd.conf`
+9. Edit `upsd.conf`
 
     ```
     # Network UPS Tools: Listen to all addresses
@@ -138,13 +138,13 @@ sudo apt upgrade -y
 
     ```
 
-10- Edit `nut.conf`
+10. Edit `nut.conf`
 
     ```
     MODE=netserver
     ```
 
-11- Edit `upsd.users`
+11. Edit `upsd.users`
 
     ```
     [ups_admin]
@@ -168,7 +168,7 @@ sudo apt upgrade -y
       upsmon slave
     ```
 
-12- reboot or 
+12. reboot or 
 
     ```
     sudo service nut-server restart
@@ -186,37 +186,37 @@ sudo apt upgrade -y
 
 ## NUT Client
 
-1- for new client install via (for the server its already done)
+1. for new client install via (for the server its already done)
 
     ```
     sudo apt install nut-client
     ```
 
-2- Verify connection to server: 
+2. Verify connection to server: 
 
     ```
     upsc eaton5p1550i@pihole.local
     ```
 
-3- edit `upsmon.conf`
+3. edit `upsmon.conf`
 
     ```
     MONITOR eaton5p1550i@pihole.local 1 ups_user theUPSpwd secondary
     ```
 
-4- edit `nut.conf`
+4. edit `nut.conf`
 
     ```
     MODE=netclient
     ```
 
-5- Check logs via
+5. Check logs via
 
     ```
     journalctl -f
     ```
 
-6- **Configuration**, the global scheme is:
+6. **Configuration**, the global scheme is:
 
   - Notify flags declared in  `upsmon.conf` 
   - `NOTIFYCMD /usr/sbin/upssched` declared in `upsmon.conf` to work with upssched
@@ -224,7 +224,7 @@ sudo apt upgrade -y
   - `CMDSCRIPT /home/akira/docker/nut/ups-cmd` in `upssched.conf` is the script in where action will be implemented
     using the argument to determine which macro will be triggered
 
-7- Edit `upssched.conf` would be something like this:
+7. Edit `upssched.conf` would be something like this:
 
     `*` stand for all UPS connected to the server, could be `eaton5p1550i@localhost`
 
@@ -280,7 +280,7 @@ sudo apt upgrade -y
     AT REPLBATT * START-TIMER replbatt 300
     ```
 
-8- Edit the script `ups-cmd` **(which shall be executable)**
+8. Edit the script `ups-cmd` **(which shall be executable)**
 
     ```
     #!/bin/sh
