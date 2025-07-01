@@ -1,0 +1,90 @@
+#!/bin/sh
+
+# --- Config --------------
+
+
+# target hostname or ip of device that will be checked up
+# if target is down on 2nd check after $retry, power cycle UPS
+target=192.168.40.40
+#target=truenas.local
+
+retry=2m
+minCharge=30 # min UPS %charge to power on device
+
+ups=eaton5p1550i@localhost
+powerOffCmd=outlet.1.load.off
+powerOnCmd=outlet.1.load.on
+admin=ups_admin
+pwd=p@ssw0rd
+
+# --- Config --------------
+
+case $1 in
+  onbatt)
+    logger -t ups-cmd "UPS running on battery"
+    echo "UPS running on batt" > /dev/shm/line1
+    ;;
+  online)
+    logger -t ups-cmd "Power restored on UPS"
+
+    # test if target device is alive if not power cycle
+    #if ping -c 1 -W 1 "$target"; then
+    if curl -I "http://$target"; then
+      logger -t ups-cmd "$target alive"
+    else
+      logger -t ups-cmd "$target offline, retrying in $retry"
+      sleep $retry
+      if curl -I "http://$target"; then
+        logger -t ups-cmd "$target is alive"
+      else
+        # $target offline for more than $retry time,
+        # wait for ups battery enough to power cycle
+        logger -t ups-cmd "$target offline checkin UPS battery charge"
+        while :; do
+          clear;
+          charge=$(upsc eaton5p1550i@localhost battery.charge > /dev/stdout 2> /dev/null)
+          if [ $charge -ge $minCharge ]; then
+            # $target offline and UPS charge enough, 
+            # power cycle to wake up devices   
+            logger -t ups-cmd "$target offline UPS battery is $charge waking up devices"     
+            upscmd -u $admin -p $pwd $ups $powerOffCmd
+            sleep 3s
+            upscmd -u $admin -p $pwd $ups $powerOnCmd
+            break
+          fi
+          logger -t ups-cmd "$charge < $minCharge retring in 1 min"
+          sleep 1m; # check if battery is enough evry min
+        done
+        
+      fi
+    fi    
+    ;;
+  lowbatt)
+    logger -t ups-cmd "Low battery on UPS!"
+    ;;
+  shutafter5min)
+    logger -t ups-cmd "Shutdown after 5 minutes"
+    #/usr/bin/upsmon -c fsd
+    ;;
+  fsd)
+    logger -t ups-cmd "Forced Shutdown from UPS!"
+    ;;
+  commok)
+    logger -t ups-cmd "Communications restored with UPS"
+    ;;
+  commbad)
+    logger -t ups-cmd "Warning: Lost communications with UPS"
+    ;;
+  shutdown)
+    logger -t ups-cmd "System is shutting down now!"
+    ;;
+  replbatt)
+    logger -t ups-cmd "Replace battery on UPS"
+    ;;
+  nocomm)
+    logger -t ups-cmd "The UPS can’t be contacted for monitoring!"
+    ;;
+  *)
+    logger -t ups-cmd "Unrecognized command: $1"
+    ;;
+esac

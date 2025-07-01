@@ -30,9 +30,12 @@ sudo apt upgrade -y
 
 2. Install
 
+
     ```
-    sudo apt install nut nut-client nut-server
+    sudo apt install nut
     ```
+    This will install packages `nut-client` and `nut-server`
+
 
 3. Scan devices
 
@@ -56,7 +59,7 @@ sudo apt upgrade -y
     ```
     sudo cp /etc/nut/ups.conf /etc/nut/ups.example.conf  
     sudo ln -sv /etc/nut/ups.conf /home/akira/docker/nut/ups.conf
-    sudo chmod 664 ups.conf 
+    sudo chmod 660 ups.conf 
     ```
 
 5. Add user to nut group
@@ -183,6 +186,16 @@ sudo apt upgrade -y
     ```
     upsc eaton5p1550i@localhost
     ```
+    
+    run driver in debug mode
+    
+    ```
+    /usr/lib/nut/usbhid-ups -a {{UPS_NAME}} -DDD -d1
+    
+    or
+    
+    upsdrvctl -DD -d start eaton5p1550i
+    ```
 
 ## NUT Client
 
@@ -201,7 +214,31 @@ sudo apt upgrade -y
 3. edit `upsmon.conf`
 
     ```
-    MONITOR eaton5p1550i@pihole.local 1 ups_user theUPSpwd secondary
+    RUN_AS_USER root
+    
+    MONITOR eaton5p1550i@localhost 1 ups_admin p@ssw0rd primary
+
+    # Use upssched to trigger scripts
+    NOTIFYCMD /usr/sbin/upssched
+
+    SHUTDOWNCMD "/sbin/shutdown -h now"
+    FINALDELAY 10 #delay prior to shutdown this server after notify shutdown
+    # File flag that will be created if system goes down
+    POWERDOWNFLAG /etc/killpower 
+
+    # What will trigger the scripts
+    NOTIFYFLAG ONLINE SYSLOG+EXEC+WALL
+    NOTIFYFLAG ONBATT SYSLOG+EXEC+WALL
+    NOTIFYFLAG LOWBATT SYSLOG+EXEC+WALL
+    NOTIFYFLAG FSD SYSLOG+EXEC+WALL
+    NOTIFYFLAG COMMOK SYSLOG+EXEC
+    NOTIFYFLAG COMMBAD SYSLOG+EXEC
+    NOTIFYFLAG NOCOMM SYSLOG+EXEC
+    NOTIFYFLAG SHUTDOWN SYSLOG+EXEC+WALL
+    NOTIFYFLAG REPLBATT SYSLOG+EXE
+
+    # No Comm Warn Time
+    NOCOMMWARNTIME 640
     ```
 
 4. edit `nut.conf`
@@ -229,7 +266,7 @@ sudo apt upgrade -y
     `*` stand for all UPS connected to the server, could be `eaton5p1550i@localhost`
 
     ```
-    CMDSCRIPT /home/akira/docker/nut/ups-cmd
+    CMDSCRIPT /etc/nut/upssched-cmd
     PIPEFN /run/nut/upssched.pipe
     LOCKFN /run/nut/upssched.lock
 
@@ -280,7 +317,7 @@ sudo apt upgrade -y
     AT REPLBATT * START-TIMER replbatt 300
     ```
 
-8. Edit the script `ups-cmd` **(which shall be executable)**
+8. Edit the script `upssched-cmd` **(which shall be executable)**
 
     ```
     #!/bin/sh
