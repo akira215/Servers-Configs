@@ -168,18 +168,26 @@ sudo apt upgrade -y
     [admin]
       password = 123456
       instcmds = ALL
-      upsmon slave
+      upsmon slaveups
     ```
 
 12. reboot or 
 
     ```
-    sudo service nut-server restart
     sudo service nut-client restart
     sudo systemctl restart nut-monitor
     sudo upsdrvctl stop
     sudo upsdrvctl start
     ```
+
+    Enable at boot
+
+    ```
+    sudo systemctl enable nut-client
+    sudo systemctl enable nut-monitor
+
+    ```
+
 
     try
 
@@ -320,15 +328,18 @@ sudo apt upgrade -y
 8. Edit the script `upssched-cmd` **(which shall be executable)**
 
     ```
-    #!/bin/sh
+   #!/bin/sh
+
+    # --- Config --------------
+
 
     # target hostname or ip of device that will be checked up
     # if target is down on 2nd check after $retry, power cycle UPS
-
-    target=192.168.40.40
+    target=192.168.40.41
     #target=truenas.local
-    retry=2m
-    minCharge=30 # min UPS %charge to power on device
+
+    retry=4m #4min to reboot the server
+    minCharge=90 # min UPS %charge to power on device
 
     ups=eaton5p1550i@localhost
     powerOffCmd=outlet.1.load.off
@@ -336,41 +347,63 @@ sudo apt upgrade -y
     admin=ups_admin
     pwd=p@ssw0rd
 
-    # -----------------
+    fname_line1=/tmp/oled-display/line1 
+    fname_line2=/tmp/oled-display/line2 
+
+    # --- Config --------------
+    #mkdir -p /tmp/oled-display #done in the python file
+
 
     case $1 in
       onbatt)
-        logger -t ups-cmd "UPS running on battery"
+        logger -t upssched-cmd "UPS running on battery"
+        echo "UPS on batt" > $fname_line1
+        echo "timer" > $fname_line2
         ;;
       online)
-        logger -t ups-cmd "Power restored on UPS"
-
+        logger -t upssched-cmd "Power restored on UPS"
+        echo "UPS on line" >  $fname_line1
         # test if target device is alive if not power cycle
         #if ping -c 1 -W 1 "$target"; then
         if curl -I "http://$target"; then
-          logger -t ups-cmd "$target alive"
+          logger -t upssched-cmd "$target alive"
+          echo "$target alive" >  $fname_line2
         else
-          logger -t ups-cmd "$target offline, retrying in $retry"
+          logger -t upssched-cmd "$target offline, retrying in $retry"
+          echo "Retry in $retry s" >  $fname_line1
+          echo "timer" >  $fname_line2
           sleep $retry
           if curl -I "http://$target"; then
-            logger -t ups-cmd "$target is alive"
+            logger -t upssched-cmd "$target is alive"
+            echo "" >  $fname_line1
+            echo "$target alive" >  $fname_line2
           else
             # $target offline for more than $retry time,
             # wait for ups battery enough to power cycle
-            logger -t ups-cmd "$target offline checkin UPS battery charge"
+            logger -t upssched-cmd "$target offline checkin UPS battery charge"
+            echo "Server offline" >  $fname_line1
+            echo "checking charge" >  $fname_line1
             while :; do
               clear;
               charge=$(upsc eaton5p1550i@localhost battery.charge > /dev/stdout 2> /dev/null)
               if [ $charge -ge $minCharge ]; then
                 # $target offline and UPS charge enough, 
                 # power cycle to wake up devices   
-                logger -t ups-cmd "$target offline UPS battery is $charge waking up devices"     
+                logger -t upssched-cmd "$target offline UPS battery is $charge waking up devices"   
+                echo " $charge % => Ok" >  $fname_line1
+                echo "Power cycle 1" >  $fname_line2
+
                 upscmd -u $admin -p $pwd $ups $powerOffCmd
-                sleep 3s
+                sleep 5s
                 upscmd -u $admin -p $pwd $ups $powerOnCmd
+
+                echo "Power cyle done" >  $fname_line1
+                echo "" >  $fname_line2
                 break
               fi
-              logger -t ups-cmd "$charge < $minCharge retring in 1 min"
+              logger -t upssched-cmd "$charge < $minCharge retring in 1 min"
+              echo "Waiting $minCharge %" >  $fname_line1
+              echo "Actual $charge %" >  $fname_line2
               sleep 1m; # check if battery is enough evry min
             done
             
@@ -378,35 +411,62 @@ sudo apt upgrade -y
         fi    
         ;;
       lowbatt)
-        logger -t ups-cmd "Low battery on UPS!"
+        logger -t upssched-cmd "Low battery on UPS!"
+        echo "UPS low batt" > $fname_line1
         ;;
       shutafter5min)
-        logger -t ups-cmd "Shutdown after 5 minutes"
+        logger -t upssched-cmd "Shutdown after 5 minutes"
         #/usr/bin/upsmon -c fsd
         ;;
       fsd)
-        logger -t ups-cmd "Forced Shutdown from UPS!"
+        logger -t upssched-cmd "Forced Shutdown from UPS!"
+        echo "UPS forced shutdown" > $fname_line1
         ;;
       commok)
-        logger -t ups-cmd "Communications restored with UPS"
+        logger -t upssched-cmd "Communications restored with UPS"
+        echo "UPS Com Ok" > $fname_line1
+        echo "" > $fname_line2
         ;;
       commbad)
-        logger -t ups-cmd "Warning: Lost communications with UPS"
+        logger -t upssched-cmd "Warning: Lost communications with UPS"
+        echo "UPS Com lost" > $fname_line1
+        echo "timer" > $fname_line2
         ;;
       shutdown)
-        logger -t ups-cmd "System is shutting down now!"
+        logger -t upssched-cmd "System is shutting down now!"
+        echo "UPS is shutting down now" > $fname_line1
         ;;
       replbatt)
-        logger -t ups-cmd "Replace battery on UPS"
+        logger -t upssched-cmd "Replace battery on UPS"
+        echo "UPS replace battery" > $fname_line1
+        echo "timer" > $fname_line2
         ;;
       nocomm)
-        logger -t ups-cmd "The UPS can’t be contacted for monitoring!"
+        logger -t upssched-cmd "The UPS can’t be contacted for monitoring!"
+        echo "UPS no Com" > $fname_line1
         ;;
       *)
-        logger -t ups-cmd "Unrecognized command: $1"
+        logger -t upssched-cmd "Unknown event: $1"
+        echo "UPS unknown event" > $fname_line1
         ;;
     esac
     ```
+
+10. Configure RAMDISK
+
+**Warning** python script is creating the directories in `/tmp` at boot
+
+```
+sudo nano /etc/fstab
+```
+
+Add these lines
+
+```
+# RAM disk tmp and log in RAM disk
+tmpfs /tmp  tmpfs defaults,noatime 0 0
+tmpfs /var/log  tmpfs defaults,noatime,size=16m 0 0
+```
 
 9. List available commands for UPS and driver:
 
