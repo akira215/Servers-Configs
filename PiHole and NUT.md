@@ -9,7 +9,7 @@ sudo apt update
 sudo apt upgrade -y
 ```
 
-
+To access SSH via VS Code, you may want to delete old entries (same ip) editing `~/.ssh/known_hosts`
 
 
 # NUT UPS install & config
@@ -58,14 +58,21 @@ sudo apt upgrade -y
 
     ```
     sudo cp /etc/nut/ups.conf /etc/nut/ups.example.conf  
+
+    sudo ln -sv /etc/nut/nut.conf /home/akira/docker/nut/nut.conf
     sudo ln -sv /etc/nut/ups.conf /home/akira/docker/nut/ups.conf
-    sudo chmod 660 ups.conf 
+    sudo ln -sv /etc/nut/upsd.conf /home/akira/docker/nut/upsd.conf
+    sudo ln -sv /etc/nut/upsd.users /home/akira/docker/nut/upsd.users
+    sudo ln -sv /etc/nut/upsmon.conf /home/akira/docker/nut/upsmon.conf
+    sudo ln -sv /etc/nut/upssched.conf /home/akira/docker/nut/upssched.conf
+
+    sudo chmod 660 /etc/nut/*
     ```
 
 5. Add user to nut group
 
     ```
-    sudo usermod -a -G nut user
+    sudo usermod -a -G nut $USER
     ```
 
     Logout & Login so user update groups (check with `groups`)
@@ -205,6 +212,27 @@ sudo apt upgrade -y
     upsdrvctl -DD -d start eaton5p1550i
     ```
 
+    Change UPS variable
+
+    ```
+    upsrw eaton5p1550i
+
+
+    upsrw -s outlet.1.delay.shutdown=180 eaton5p1550i
+    upsrw -s outlet.1.autoswitch.charge.low=20 eaton5p1550i
+    upsrw -s outlet.2.autoswitch.charge.low=20 eaton5p1550i
+    upsrw -s battery.charge.restart=25 eaton5p1550i
+    ```
+
+    UPS commands
+
+    ```
+    upscmd -l eaton5p1550i
+
+    upscmd eaton5p1550i beeper.disable
+    ```
+
+
 ## NUT Client
 
 1. for new client install via (for the server its already done)
@@ -260,6 +288,13 @@ sudo apt upgrade -y
     ```
     journalctl -f
     ```
+
+    disable driver if required
+
+    ```
+    systemctl disable --now nut-driver@ups
+    ```
+
 
 6. **Configuration**, the global scheme is:
 
