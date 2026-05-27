@@ -126,14 +126,10 @@ systemctl status nut-monitor
 - To check UPS status from your Proxmox Server
 `upsc <name>@<address>` for the remote UPS
 ```
-upsc ups@192.168.1.5
+upsc eaton5p1550i@192.168.40.15:3493
 ```
 This will return a bunch of your UPS info if everything is working correctly
 
-- Confirm clients are connecting back on the Synology NAS:
-```
-upsc -c ups
-```
 
 # Proxmox - Gouverneur de CPU
 
