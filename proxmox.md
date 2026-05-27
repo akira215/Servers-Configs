@@ -1,4 +1,10 @@
 # Proxmox - Post install
+
+## remove popup and subscirption
+Visit here and follow
+[Community PVE scripts](https://community-scripts.org/scripts/post-pve-install?id=post-pve-install)
+
+
 ## Create a separate network bridge for VM
 GUI -> Node -> Network -> Create -> Linux Bridge -> bridge port -> enXXXX
 
@@ -24,6 +30,7 @@ GRUB_CMDLINE_LINUX_DEFAULT="quiet"
 GRUB_CMDLINE_LINUX=""
 ```
 then run `update-grub`
+
 
 # Proxmox - Gouverneur de CPU
 
