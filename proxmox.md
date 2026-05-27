@@ -172,7 +172,7 @@ upsc eaton5p1550i@192.168.40.15:3493
 ```
 This will return a bunch of your UPS info if everything is working correctly
 
-# Set color for prompt andsls in ssh
+# Set color for prompt and ls in ssh
 
 Edit `~/.bashrc` and uncomment
 ```
