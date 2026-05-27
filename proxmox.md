@@ -1,6 +1,6 @@
 # Proxmox - Post install
 
-## remove popup and subscirption
+## Remove popup and subscription
 Visit here and follow
 [Community PVE scripts](https://community-scripts.org/scripts/post-pve-install?id=post-pve-install)
 
@@ -129,6 +129,22 @@ systemctl status nut-monitor
 upsc eaton5p1550i@192.168.40.15:3493
 ```
 This will return a bunch of your UPS info if everything is working correctly
+
+# Set color for prompt andsls in ssh
+
+Edit `~/.bashrc` and uncomment
+```
+# colorized prompt
+PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$'
+
+# You may uncomment the following lines if you want `ls' to be colorized:
+export LS_OPTIONS='--color=auto'
+eval "$(dircolors)"
+alias ls='ls $LS_OPTIONS'
+alias ll='ls $LS_OPTIONS -l'
+alias l='ls $LS_OPTIONS -lA'
+```
+To run the `.bashrc` script, just type `. ~/.bashrc`
 
 
 # Proxmox - Gouverneur de CPU
