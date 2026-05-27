@@ -4,9 +4,51 @@
 Visit here and follow
 [Community PVE scripts](https://community-scripts.org/scripts/post-pve-install?id=post-pve-install)
 
+## Network
 
-## Create a separate network bridge for VM
-GUI -> Node -> Network -> Create -> Linux Bridge -> bridge port -> enXXXX
+- Create a separate network bridge for VM
+
+`GUI -> Node -> Network -> Create -> Linux Bridge -> bridge port -> enXXXX`
+
+- Disable Wake up on Lan
+
+Edit `/etc/network/interfaces`
+
+```
+auto lo
+iface lo inet loopback
+
+# Disable Wake Up On Lan
+up ethtool -s nic0_lm  wol d
+up ethtool -s nic1_10g wol d
+up ethtool -s nic2_10g wol d
+
+iface nic0_lm inet manual
+
+iface nic1_10g inet manual
+
+iface nic2_10g inet manual
+
+auto vmbr0
+iface vmbr0 inet static
+        address 192.168.40.10/24
+        gateway 192.168.40.1
+        bridge-ports nic0_lm
+        bridge-stp off
+        bridge-fd 0
+#Bridge for admin
+
+auto vmbr1
+iface vmbr1 inet manual
+        bridge-ports nic1_10g
+        bridge-stp off
+        bridge-fd 0
+#Bridge for VM
+
+source /etc/network/interfaces.d/*
+```
+
+to reload type `ifreload -av`
 
 ## key for ssh & disable password for ssh
 Create a key pair and put it on `~/.ssh/` in the remote machine
