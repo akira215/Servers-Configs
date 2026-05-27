@@ -8,7 +8,9 @@ Visit here and follow
 
 - Create a separate network bridge for VM
 
-`GUI -> Node -> Network -> Create -> Linux Bridge -> bridge port -> enXXXX`
+On the GUI
+
+`Node > Network > Create > Linux Bridge > bridge port > enXXXX`
 
 - Disable Wake up on Lan
 
@@ -218,7 +220,53 @@ crontab -e
 
 ***
 
+# Truenas SMB share for backup
 
+## create storage on proxmox
+
+On the GUI, go to
+`Datacenter > Storage > Add > SMB/CIFS`
+
+```
+ID: TrueNAS_SMB
+Server : 192.168.XX.XX
+Username: proxmox
+Password: @El..
+Share: backup_proxmox
+Enable: checked
+Content: only backup (remove Disk Image)
+Subdirectory: /Proxmox
+
+Backup retention: Keep all backup
+```
+## create backup
+
+On the GUI, go to
+`Datacenter > Backup > Add `
+
+***
+
+# Move VM from one Node to another
+
+- Power off VM
+
+- Make pre-migration backup
+
+- Find VM config file folder on both nodes /etc/pve/nodes/[node name]/qemu-server/110.conf
+
+- Create a directory to store the config files on a shared mount point, accessible by Node B (useful as I was migrating several VMs at once)
+`mkdir /mnt/pve/[shared]/pve-conf-files`
+
+ - Copy the config file from Node A to the config folder on the shared drive
+`cp 110.conf.bak /mnt/pve/[shared]/pve-conf-files`
+
+- Transfer config file and backup to new node.
+
+- Test boot on new node.
+
+- Make post-migration backup.
+
+***
 
 # Installation d'OMV5 sur Proxmox
 
