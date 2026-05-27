@@ -31,6 +31,109 @@ GRUB_CMDLINE_LINUX=""
 ```
 then run `update-grub`
 
+## Install NUT Client
+- Use Shell on Proxmox Node to install NUT Client
+
+```
+apt-get install nut-client
+```
+
+- Edit `/etc/nut/nut.conf` 
+
+Modify the last line
+
+```
+MODE=netclient
+```
+
+- Edit `/etc/nut/upsmon.conf`
+
+```
+MONITOR eaton5p1550i@192.168.40.15:3493 1 ups_user p@ssw0rd secondary
+
+NOTIFYCMD /usr/sbin/upssched
+SHUTDOWNCMD "/sbin/shutdown -h now"
+
+NOTIFYFLAG ONBATT SYSLOG+EXEC
+NOTIFYFLAG LOWBATT SYSLOG+EXEC
+NOTIFYFLAG ONLINE SYSLOG+EXEC
+NOTIFYFLAG COMMBAD SYSLOG+EXEC
+NOTIFYFLAG COMMOK SYSLOG+EXEC
+NOTIFYFLAG REPLBATT SYSLOG+EXEC
+NOTIFYFLAG NOCOMM SYSLOG+EXEC
+NOTIFYFLAG FSD SYSLOG+EXEC
+NOTIFYFLAG SHUTDOWN SYSLOG+EXEC
+```
+
+- Edit `/etc/nut/upssched.conf`
+
+```
+CMDSCRIPT   /etc/nut/upssched-cmd
+PIPEFN      /var/run/nut/upssched.pipe
+LOCKFN      /var/run/nut/upssched.lock
+
+AT NOCOMM   * EXECUTE NOTIFY-NOCOMM
+AT COMMBAD  * START-TIMER NOTIFY-COMMBAD 10
+AT COMMOK   * CANCEL-TIMER NOTIFY-COMMBAD COMMOK
+AT FSD      * EXECUTE NOTIFY-FSD
+AT LOWBATT  * EXECUTE NOTIFY-LOWBATT
+AT ONBATT   * EXECUTE NOTIFY-ONBATT
+AT ONLINE   * EXECUTE NOTIFY-ONLINE
+AT REPLBATT * EXECUTE NOTIFY-REPLBATT
+AT SHUTDOWN * EXECUTE powerdown
+AT ONBATT   * START-TIMER powerdown 60
+AT ONLINE   * CANCEL-TIMER powerdown
+```
+
+
+- Create and Edit `/etc/nut/upssched-cmd`
+
+```
+#! /bin/sh
+#
+
+case $1 in
+    powerdown)
+	logger -t upssched-cmd "Power down by UPS"
+	logger -t upssched-cmd "Shutting down PVE"
+
+	/lib/nut/upsmon -c fsd
+	;;
+    *)
+	logger -t upssched-cmd "UPS event $1"
+	;;
+esac
+```
+
+make it executable `chmod +x ./upssched-cmd`
+
+- Enable monitoring services to start up with the machine:
+```
+sudo systemctl enable nut-monitor
+```
+
+- Start monitoring:
+```
+sudo systemctl start nut-monitor
+```
+
+- Verify monitoring:
+```
+systemctl status nut-client
+systemctl status nut-monitor
+```
+
+- To check UPS status from your Proxmox Server
+`upsc <name>@<address>` for the remote UPS
+```
+upsc ups@192.168.1.5
+```
+This will return a bunch of your UPS info if everything is working correctly
+
+- Confirm clients are connecting back on the Synology NAS:
+```
+upsc -c ups
+```
 
 # Proxmox - Gouverneur de CPU
 
