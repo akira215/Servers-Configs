@@ -2,15 +2,28 @@
 ## Create a separate network bridge for VM
 GUI -> Node -> Network -> Create -> Linux Bridge -> bridge port -> enXXXX
 
-## pass key for ssh
+## key for ssh & disable password for ssh
 Create a key pair and put it on `~/.ssh/` in the remote machine
 On proxmox, append (or replace, more secure) the content of the file `~/.ssh/authorized_keys` (symlink)
 
-Then to cancel the password login, create a new file in `/etc/ssh/ssh_config.d/diable_paaword_auth.conf` and place:
+Then to cancel the password login, create a new file in `/etc/ssh/sshd_config.d/diable_paaword_auth.conf` and place:
 
-```bash
+```
 PermitRootLogin prohibit-password
 ```
+
+## Reduce GRUB time
+
+Edit the file `/etc/default/grub`
+
+```
+GRUB_DEFAULT=0
+GRUB_TIMEOUT=1
+GRUB_DISTRIBUTOR=`( . /etc/os-release && echo ${NAME} )`
+GRUB_CMDLINE_LINUX_DEFAULT="quiet"
+GRUB_CMDLINE_LINUX=""
+```
+then run `update-grub`
 
 # Proxmox - Gouverneur de CPU
 
