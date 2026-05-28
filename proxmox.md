@@ -250,9 +250,12 @@ On the GUI, go to
 
 - Power off VM
 
-- Make pre-migration backup
+- Make pre-migration backup using GUI `Node > VM > Backup` and select NAS storage
 
-- Find VM config file folder on both nodes /etc/pve/nodes/[node name]/qemu-server/110.conf
+- Copy to backup 3 files on a shared folder of backup for Node B.
+
+- Find VM config file folder on both nodes
+`/etc/pve/nodes/[node name]/qemu-server/110.conf`
 
 - Create a directory to store the config files on a shared mount point, accessible by Node B (useful as I was migrating several VMs at once)
 `mkdir /mnt/pve/[shared]/pve-conf-files`
@@ -260,7 +263,12 @@ On the GUI, go to
  - Copy the config file from Node A to the config folder on the shared drive
 `cp 110.conf.bak /mnt/pve/[shared]/pve-conf-files`
 
-- Transfer config file and backup to new node.
+- Copy back this config file on Node B
+`cp /mnt/pve/[shared]/pve-conf-files/.110.conf.bak .`
+
+- On the GUI, navigate to te VM and go to `Node > VM > Backup`, select the backup and click `Restore`.
+
+- If required copy the ISO `cp /var/lib/vz/template/iso/filename.iso localfilename.iso`
 
 - Test boot on new node.
 
