@@ -276,6 +276,16 @@ On the GUI, go to
 
 ***
 
+## Check size on the disk of files
+
+```
+apt-get install ncdu
+ncdu -x /
+```
+
+***
+
+
 # Installation d'OMV5 sur Proxmox
 
 
