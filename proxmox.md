@@ -388,7 +388,7 @@ wget -O - https://github.com/OpenMediaVault-Plugin-Developers/packages/raw/maste
 
 ## Obtain the VM image
 
-- Navigate to the installation page on the HA website: [Home Assistant Install Alternative]([https://www.home-assistant.io/installation/alternative]) 
+- Navigate to the installation page on the HA website: [Home Assistant Install Alternative](https://www.home-assistant.io/installation/alternative) 
 
 - Simply right-click the KVM/Proxmox link and copy the address
 
