@@ -418,6 +418,7 @@ System:
 - Change BIOS to OVMF (UEFI)
 - Select the EFI storage (typically local-lvm)
 - Uncheck 'Pre-Enroll keys'
+- Check 'Qemu Agent'
 
 Disks:
 - Delete the SCSI drive and any other disks
