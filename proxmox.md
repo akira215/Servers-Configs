@@ -54,7 +54,7 @@ to reload type `ifreload -av`
 
 ## key for ssh & disable password for ssh
 Create a key pair and put it on `~/.ssh/` in the remote machine
-On proxmox, append (or replace, more secure) the content of the file `~/.ssh/authorized_keys` (symlink)
+On proxmox, append (or replace, more secure) the content of the file `~/.ssh/authorized_keys` (symlink) with the public key
 
 Then to cancel the password login, create a new file in `/etc/ssh/sshd_config.d/diable_paaword_auth.conf` and place:
 
