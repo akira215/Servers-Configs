@@ -384,6 +384,92 @@ reboot
 wget -O - https://github.com/OpenMediaVault-Plugin-Developers/packages/raw/master/install | bash
 ```
 
+# Install Home Assistant VM
+
+## Obtain the VM image
+
+- Navigate to the installation page on the HA website: [Home Assistant Install Alternative]([https://www.home-assistant.io/installation/alternative]) 
+
+- Simply right-click the KVM/Proxmox link and copy the address
+
+- In your Proxmox console, navigate to `/var/lib/vz/template/iso` use `wget` to download the file
+
+```bash
+wget <ADDRESS>
+```
+
+- Expand the compressed image (letting a copy of the compressed file)
+
+```bash
+xz -d -k haos_ova-17.3.qcow2.xz 
+```
+
+## Create the VM
+
+General:
+- Select your VM name and ID
+- Select 'start at boot'
+
+OS:
+- Select 'Do not use any media'
+
+System:
+- Change 'machine' to 'q35'
+- Change BIOS to OVMF (UEFI)
+- Select the EFI storage (typically local-lvm)
+- Uncheck 'Pre-Enroll keys'
+
+Disks:
+- Delete the SCSI drive and any other disks
+
+CPU:
+- Set minimum 2 cores
+
+Memory:
+- Set minimum 4096 MB
+
+Network:
+- Leave default unless you have special requirements (static, VLAN, etc)
+
+Confirm and finish. Do not start the VM yet.
+
+## Add the image to the VM
+
+- In your node's console, use the following command to import the image from the host to the VM
+
+```bash
+qm importdisk <VM ID> </path/to/file.qcow2> <EFI location>
+```
+For example,
+
+```bash
+qm importdisk 205 /home/user/haos_ova-12.0.qcow2 local-lvm
+```
+
+- Close the node's console and select your HA VM
+
+- Go to the 'Hardware' tab
+
+- Select the 'Unused Disk' and click the 'Edit' button
+
+- Check the 'Discard' box if you're using an SSD then click 'Add'
+
+- Select the 'Options' tab
+
+- Select 'Boot Order' and hit 'Edit'
+
+- Check the newly created drive (likely scsi0) and uncheck everything else
+
+## Finishing
+
+- Start the VM
+
+- Check the shell of the VM. If it booted up correctly, you should be greeted with the link to access the Web UI.
+
+- Navigate to <VM IP>:8123
+
+Done. Everything should be up and running now.
+
 # Passthrough partition proxmox
 
 Pour cela, aller dans l'interface de Proxmox, dans l'onglet Disks de l'hote :
