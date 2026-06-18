@@ -395,7 +395,7 @@ wget -O - https://github.com/OpenMediaVault-Plugin-Developers/packages/raw/maste
 - In your Proxmox console, navigate to `/var/lib/vz/template/iso` use `wget` to download the file
 
 ```bash
-wget <ADDRESS>
+wget https://github.com/home-assistant/operating-system/releases/download/17.3/haos_ova-17.3.qcow2.xz
 ```
 
 - Expand the compressed image (letting a copy of the compressed file)
