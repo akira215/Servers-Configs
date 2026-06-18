@@ -467,7 +467,7 @@ qm importdisk 205 /home/user/haos_ova-12.0.qcow2 local-lvm
 
 - Check the shell of the VM. If it booted up correctly, you should be greeted with the link to access the Web UI.
 
-- Navigate to <VM IP>:8123
+- Navigate to `<VM IP>:8123`
 
 Done. Everything should be up and running now.
 
